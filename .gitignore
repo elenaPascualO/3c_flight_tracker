@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# Data
+data/*.db
+
+# Environment
+.env
+.streamlit/secrets.toml
+.streamlit/credentials.json
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Output
+output/charts/*.png
