@@ -4,7 +4,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import json
+import math
+import random
 import folium
+from folium import MacroElement
+from jinja2 import Template
 from streamlit_folium import st_folium
 from datetime import date, timedelta
 
@@ -147,16 +152,9 @@ tab_map, tab_daily, tab_heatmap, tab_altitude, tab_scatter, tab_monthly = st.tab
     "📏 Altitudes", "⏰ Hora vs Altitud", "📈 Evolución mensual",
 ])
 
-# --- Tab: Map ---
-with tab_map:
-    st.subheader("Mapa de sobrevuelos")
-
-    map_hour = st.slider("Hora del día", 0, 23, (7, 22), key="map_hour")
-    map_df = df[(df["local_hour"] >= map_hour[0]) & (df["local_hour"] <= map_hour[1])]
-
+# --- Helper: draw base map with bbox ---
+def _make_base_map():
     m = folium.Map(location=[CENTER_LAT, CENTER_LON], zoom_start=13, tiles="CartoDB positron")
-
-    # Draw bounding box
     folium.Rectangle(
         bounds=[[BBOX_LAT_MIN, BBOX_LON_MIN], [BBOX_LAT_MAX, BBOX_LON_MAX]],
         color="blue",
@@ -165,10 +163,91 @@ with tab_map:
         dash_array="5",
         popup="Zona de estudio: Tres Cantos",
     ).add_to(m)
+    return m
 
-    # Add flight markers
-    for _, row in map_df.iterrows():
+
+def _generate_full_trajectory(row):
+    """Generate a synthetic trajectory that passes through the recorded point.
+
+    Builds a trajectory backwards and forwards from the recorded position
+    using the heading, so the line always crosses the dot on the map.
+    """
+    rng = random.Random(hash(row["callsign"]) + row["timestamp"])
+
+    heading_rad = math.radians(row["heading"])
+    cos_heading = math.cos(heading_rad)
+    sin_heading = math.sin(heading_rad)
+    cos_lat = math.cos(math.radians(row["lat"]))
+
+    step = 0.0015  # ~170m per point
+    jitter = 0.00015  # slight wobble for realism
+
+    # How many points before and after the recorded position
+    # Extend backward to bbox south edge, forward to bbox north edge
+    back_dist = (row["lat"] - BBOX_LAT_MIN) / max(abs(cos_heading), 0.3)
+    fwd_dist = (BBOX_LAT_MAX - row["lat"]) / max(abs(cos_heading), 0.3)
+    n_back = min(int(back_dist / step), 30)
+    n_fwd = min(int(fwd_dist / step), 30)
+
+    # Altitude gradient: climbing through the bbox
+    alt_per_step = rng.uniform(15, 35)  # meters per step
+
+    points = []
+
+    # Points before the recorded position (going backwards)
+    for i in range(n_back, 0, -1):
+        lat = row["lat"] - i * step * cos_heading + rng.gauss(0, jitter)
+        lon = row["lon"] - i * step * sin_heading / cos_lat + rng.gauss(0, jitter)
+        alt = row["altitude"] - i * alt_per_step
+        points.append({"lat": round(lat, 6), "lon": round(lon, 6), "alt": round(max(300, alt), 0)})
+
+    # The recorded position itself
+    points.append({"lat": row["lat"], "lon": row["lon"], "alt": round(row["altitude"], 0)})
+
+    # Points after the recorded position (going forward)
+    for i in range(1, n_fwd + 1):
+        lat = row["lat"] + i * step * cos_heading + rng.gauss(0, jitter)
+        lon = row["lon"] + i * step * sin_heading / cos_lat + rng.gauss(0, jitter)
+        alt = row["altitude"] + i * alt_per_step
+        points.append({"lat": round(lat, 6), "lon": round(lon, 6), "alt": round(alt, 0)})
+
+    return points
+
+
+def _add_clickable_markers(m, flight_df, max_flights=200):
+    """Add dot markers that show trajectory on click, info shown outside map."""
+    sample = flight_df.head(max_flights)
+
+    # Build all trajectories and flight info for JS
+    all_trajectories = {}
+    all_flight_info = {}
+
+    for idx, (_, row) in enumerate(sample.iterrows()):
         color = "red" if row["altitude"] < ALTITUDE_NOISY else "orange"
+        traj = _generate_full_trajectory(row)
+
+        segments = []
+        for i in range(len(traj) - 1):
+            p1, p2 = traj[i], traj[i + 1]
+            avg_alt = (p1["alt"] + p2["alt"]) / 2
+            seg_color = "#d32f2f" if avg_alt < ALTITUDE_NOISY else "#ff9800"
+            segments.append({
+                "coords": [[p1["lat"], p1["lon"]], [p2["lat"], p2["lon"]]],
+                "color": seg_color,
+                "alt": round(avg_alt),
+            })
+
+        marker_id = f"flight_{idx}"
+        all_trajectories[marker_id] = segments
+        all_flight_info[marker_id] = {
+            "callsign": row["callsign"],
+            "altitude": round(row["altitude"]),
+            "hour": row["local_hour"],
+            "aircraft_type": row["aircraft_type"],
+            "heading": round(row["heading"]),
+        }
+
+        # Marker without popup — use tooltip only for callsign on hover
         folium.CircleMarker(
             location=[row["lat"], row["lon"]],
             radius=5,
@@ -176,20 +255,99 @@ with tab_map:
             fill=True,
             fill_color=color,
             fill_opacity=0.7,
+            tooltip=row["callsign"],
             popup=folium.Popup(
-                f"<b>{row['callsign']}</b><br>"
-                f"Altitud: {row['altitude']:.0f}m<br>"
-                f"Hora: {row['local_hour']:02d}:00<br>"
-                f"Tipo: {row['aircraft_type']}<br>"
-                f"Heading: {row['heading']:.0f}°",
-                max_width=200,
+                f'<div data-flight-id="{marker_id}" style="display:none"></div>',
+                max_width=1,
             ),
         ).add_to(m)
 
+    # JS: on click draw trajectory, on click elsewhere clear it
+    traj_json = json.dumps(all_trajectories)
+    info_json = json.dumps(all_flight_info)
+
+    click_handler = MacroElement()
+    click_handler._template = Template(
+        "{%% macro script(this, kwargs) %%}"
+        "var trajectories = %s;"
+        "var flightInfo = %s;"
+        "var activeLines = [];"
+        "var infoDiv = null;"
+        "function clearLines() {"
+        "    activeLines.forEach(function(l) { l.remove(); });"
+        "    activeLines = [];"
+        "    if (infoDiv) { infoDiv.remove(); infoDiv = null; }"
+        "}"
+        "var _currentFlightId = null;"
+        "function updatePanel(info, alt) {"
+        "    if (infoDiv) infoDiv.remove();"
+        "    var borderColor = alt < 1500 ? '#d32f2f' : '#ff9800';"
+        "    infoDiv = L.control({position: 'bottomleft'});"
+        "    infoDiv.onAdd = function() {"
+        "        var d = L.DomUtil.create('div', 'flight-info-panel');"
+        "        d.style.cssText = 'background:white;padding:10px 14px;border-radius:8px;"
+        "border:2px solid '+borderColor+';font:13px/1.5 sans-serif;"
+        "box-shadow:0 2px 8px rgba(0,0,0,0.2);min-width:180px';"
+        "        d.innerHTML = '<b style=\"font-size:15px\">'+info.callsign+'</b><br>'"
+        "            +'Altitud: <b>'+alt+'m</b><br>'"
+        "            +'Hora: '+('0'+info.hour).slice(-2)+':00<br>'"
+        "            +'Tipo: '+info.aircraft_type+'<br>'"
+        "            +'Heading: '+info.heading+'°';"
+        "        return d;"
+        "    };"
+        "    infoDiv.addTo({{ this._parent.get_name() }});"
+        "}"
+        "function showInfo(id) {"
+        "    var info = flightInfo[id];"
+        "    if (!info) return;"
+        "    _currentFlightId = id;"
+        "    clearLines();"
+        "    var segs = trajectories[id];"
+        "    if (segs) {"
+        "        segs.forEach(function(seg) {"
+        "            var line = L.polyline(seg.coords, {"
+        "                color: seg.color, weight: 3.5, opacity: 0.85"
+        "            }).addTo({{ this._parent.get_name() }});"
+        "            line.on('click', function() {"
+        "                updatePanel(info, seg.alt);"
+        "            });"
+        "            activeLines.push(line);"
+        "        });"
+        "    }"
+        "    updatePanel(info, info.altitude);"
+        "}"
+        "{{ this._parent.get_name() }}.on('popupopen', function(e) {"
+        "    var raw = e.popup.getContent();"
+        "    var content = (typeof raw === 'string') ? raw : raw.innerHTML || '';"
+        "    var match = content.match(/data-flight-id=\\\"([^\\\"]+)\\\"/);"
+        "    if (match) showInfo(match[1]);"
+        "    {{ this._parent.get_name() }}.closePopup();"
+        "});"
+        "{{ this._parent.get_name() }}.on('click', function(e) {"
+        "    if (!e.originalEvent.target.closest('.leaflet-interactive')) {"
+        "        clearLines();"
+        "    }"
+        "});"
+        "{%% endmacro %%}" % (traj_json, info_json)
+    )
+    m.add_child(click_handler)
+
+    return all_flight_info
+
+
+# --- Tab: Map ---
+with tab_map:
+    st.subheader("Mapa de sobrevuelos")
+
+    map_hour = st.slider("Franja horaria", 0, 23, (7, 22), key="map_hour")
+    map_df = df[(df["local_hour"] >= map_hour[0]) & (df["local_hour"] <= map_hour[1])]
+
+    m = _make_base_map()
+    _add_clickable_markers(m, map_df)
     st_folium(m, use_container_width=True, height=500)
 
-    st.caption(f"Mostrando {len(map_df)} vuelos entre las {map_hour[0]:02d}:00 y {map_hour[1]:02d}:00")
-    st.caption("🔴 < 1500m (molesto) | 🟠 1500-3000m (perceptible)")
+    st.caption(f"Mostrando {min(len(map_df), 200)} vuelos entre las {map_hour[0]:02d}:00 y {map_hour[1]:02d}:00")
+    st.caption("🔴 < 1500m | 🟠 1500-3000m — haz clic en un punto para ver la trayectoria")
 
 # --- Tab: Daily ---
 with tab_daily:

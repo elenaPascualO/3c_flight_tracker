@@ -18,38 +18,49 @@ Tres Cantos is a residential town north of Madrid directly under the departure p
 
 The dashboard includes:
 
-- **Interactive map** of overflight positions, color-coded by altitude
-- **Daily flight counts** with summary statistics
+- **Interactive map** — click any overflight dot to see its full trajectory through the study area, color-coded by altitude (red < 1,500m, orange 1,500–3,000m). Click on any segment of the trajectory to see the altitude at that point.
+- **Daily flight counts** with summary statistics (mean, median, max, min)
 - **Weekly heatmap** (hour of day × day of week)
 - **Altitude distribution** with thresholds: <1,500m (high noise) and 1,500–3,000m (perceptible)
 - **Hour vs altitude scatter plot** to identify patterns (e.g. lower altitudes at night)
 - **Monthly evolution** for trend analysis
 
-## Setup
+## Quick start (demo with synthetic data)
 
-### Prerequisites
+No accounts or credentials needed — just Python and `uv`:
 
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/) package manager
-- An [OpenSky Network](https://opensky-network.org/) account with Trino access (for historical data)
+1. **Install uv** (if you don't have it):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-### Installation
+2. **Clone and run:**
+   ```bash
+   git clone https://github.com/elenaPascualO/3c_flight_tracker.git
+   cd 3c_flight_tracker
+   uv sync
+   uv run python scripts/generate_sample_data.py
+   uv run streamlit run app.py
+   ```
 
-```bash
-uv sync
-cp .streamlit/secrets.toml.example .streamlit/secrets.toml
-# Edit .streamlit/secrets.toml with your OpenSky credentials
-streamlit run app.py
-```
+3. **View the dashboard:** open http://localhost:8501 in your browser. The sample data covers **October–December 2024**, so set the date filters in the sidebar to that range (e.g. `2024/10/01` to `2024/12/29`).
 
-### OpenSky Trino access
+## Setup with real data
 
-Historical flight data requires approved access to OpenSky's Trino database:
+To collect real flight data, you need an OpenSky Network account with Trino access:
 
 1. Register at https://opensky-network.org
-2. Request data access: **My OpenSky > Request Data Access**
-3. Select "Trino" as data type
-4. Access is granted for research and non-commercial use
+2. Request data access: **My OpenSky > Request Data Access** (select "Trino")
+3. Configure credentials:
+   ```bash
+   cp .streamlit/secrets.toml.example .streamlit/secrets.toml
+   # Edit .streamlit/secrets.toml with your OpenSky credentials
+   ```
+4. Run the dashboard:
+   ```bash
+   uv run streamlit run app.py
+   ```
+5. Use the "Descargar datos" section in the sidebar to download flight data for specific date ranges.
 
 ## Project structure
 
@@ -60,6 +71,7 @@ Historical flight data requires approved access to OpenSky's Trino database:
 | `src/collector.py` | Data collection from OpenSky/Trino via the `traffic` library |
 | `src/database.py` | SQLite schema, queries, and data management |
 | `src/analyzer.py` | Statistical metrics computation |
+| `scripts/generate_sample_data.py` | Generate synthetic demo data |
 | `tests/` | Test suite (pytest) |
 
 ## Key parameters
@@ -78,7 +90,7 @@ All flight data comes from [OpenSky Network](https://opensky-network.org/), a no
 
 ## License
 
-This project is open source. Data from OpenSky Network is subject to their [terms of use](https://opensky-network.org/about/terms-of-use).
+MIT License. See [LICENSE](LICENSE) for details. Data from OpenSky Network is subject to their [terms of use](https://opensky-network.org/about/terms-of-use).
 
 ## Acknowledgements
 
