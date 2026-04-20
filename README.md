@@ -84,6 +84,12 @@ To collect real flight data, you need an OpenSky Network account with Trino acce
 | Heading filter | 340°–20° (northbound, runway 36L) |
 | Airport | LEMD (Madrid-Barajas) |
 
+## Status
+
+This project is under active development. We are currently awaiting approval for access to OpenSky Network's historical flight database (Trino). In the meantime, the dashboard can be tested with synthetic sample data (see [Quick start](#quick-start-demo-with-synthetic-data)).
+
+The project will evolve over time based on data availability and feedback from contributors and users. Feature requests and contributions are welcome — feel free to open an issue or pull request.
+
 ## Data source
 
 All flight data comes from [OpenSky Network](https://opensky-network.org/), a non-profit association that provides open air traffic data collected from a network of ADS-B receivers. This project queries historical state vectors via their Trino/SQL interface.
