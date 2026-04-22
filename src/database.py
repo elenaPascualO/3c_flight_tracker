@@ -1,11 +1,13 @@
 """SQLite database management for flight overflight data."""
 
 import sqlite3
+from dataclasses import asdict
 from datetime import date, datetime
 
 import pandas as pd
 
 from src.config import DB_PATH
+from src.noise_report_parser import AnnualRow, MonthlyRow
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS overflights (
@@ -36,6 +38,34 @@ CREATE TABLE IF NOT EXISTS collection_runs (
     status TEXT NOT NULL DEFAULT 'completed',
     num_flights INTEGER DEFAULT 0,
     collected_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS noise_annual (
+    year INTEGER NOT NULL,
+    tmr_id INTEGER NOT NULL,
+    location_index INTEGER,
+    tmr_flag TEXT NOT NULL DEFAULT '',
+    laeq_total_day REAL, flags_total_day TEXT NOT NULL DEFAULT '',
+    laeq_avion_day REAL, flags_avion_day TEXT NOT NULL DEFAULT '',
+    laeq_total_evening REAL, flags_total_evening TEXT NOT NULL DEFAULT '',
+    laeq_avion_evening REAL, flags_avion_evening TEXT NOT NULL DEFAULT '',
+    laeq_total_night REAL, flags_total_night TEXT NOT NULL DEFAULT '',
+    laeq_avion_night REAL, flags_avion_night TEXT NOT NULL DEFAULT '',
+    source_file TEXT NOT NULL,
+    PRIMARY KEY (year, tmr_id, location_index)
+);
+
+CREATE TABLE IF NOT EXISTS noise_monthly (
+    year INTEGER NOT NULL,
+    month INTEGER NOT NULL,
+    tmr_id INTEGER NOT NULL,
+    period TEXT NOT NULL,
+    laeq_total REAL,
+    flags_total TEXT NOT NULL DEFAULT '',
+    laeq_avion REAL,
+    flags_avion TEXT NOT NULL DEFAULT '',
+    source_file TEXT NOT NULL,
+    PRIMARY KEY (year, month, tmr_id, period)
 );
 """
 
@@ -93,6 +123,74 @@ def get_downloaded_ranges(db_path: str | None = None) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+def insert_noise_annual(rows: list[AnnualRow], source_file: str, db_path: str | None = None) -> int:
+    """Insert/replace annual LAeq rows. Returns count inserted."""
+    if not rows:
+        return 0
+    conn = get_connection(db_path)
+    payload = []
+    for r in rows:
+        d = asdict(r)
+        d["source_file"] = source_file
+        # SQLite PRIMARY KEY no permite NULL en una columna de PK; usamos 0 como sentinel
+        # para "ubicación única" y reservamos 1..N para sub-ubicaciones diferenciadas.
+        if d["location_index"] is None:
+            d["location_index"] = 0
+        payload.append(d)
+    cols = list(payload[0].keys())
+    conn.executemany(
+        f"INSERT OR REPLACE INTO noise_annual ({', '.join(cols)}) VALUES ({', '.join(':' + c for c in cols)})",
+        payload,
+    )
+    conn.commit()
+    conn.close()
+    return len(payload)
+
+
+def insert_noise_monthly(rows: list[MonthlyRow], source_file: str, db_path: str | None = None) -> int:
+    """Insert/replace monthly LAeq rows. Returns count inserted."""
+    if not rows:
+        return 0
+    conn = get_connection(db_path)
+    payload = [{**asdict(r), "source_file": source_file} for r in rows]
+    cols = list(payload[0].keys())
+    conn.executemany(
+        f"INSERT OR REPLACE INTO noise_monthly ({', '.join(cols)}) VALUES ({', '.join(':' + c for c in cols)})",
+        payload,
+    )
+    conn.commit()
+    conn.close()
+    return len(payload)
+
+
+def query_noise_annual(tmr_id: int | None = None, db_path: str | None = None) -> pd.DataFrame:
+    """Query annual noise rows, optionally filtered by TMR id."""
+    conn = get_connection(db_path)
+    query = "SELECT * FROM noise_annual"
+    params: list = []
+    if tmr_id is not None:
+        query += " WHERE tmr_id = ?"
+        params.append(tmr_id)
+    query += " ORDER BY year, tmr_id, location_index"
+    df = pd.read_sql_query(query, conn, params=params)
+    conn.close()
+    return df
+
+
+def query_noise_monthly(tmr_id: int | None = None, db_path: str | None = None) -> pd.DataFrame:
+    """Query monthly noise rows, optionally filtered by TMR id."""
+    conn = get_connection(db_path)
+    query = "SELECT * FROM noise_monthly"
+    params: list = []
+    if tmr_id is not None:
+        query += " WHERE tmr_id = ?"
+        params.append(tmr_id)
+    query += " ORDER BY year, month, tmr_id, period"
+    df = pd.read_sql_query(query, conn, params=params)
+    conn.close()
+    return df
 
 
 def query_overflights(
