@@ -21,3 +21,11 @@ data/*.db
 
 # Output
 output/charts/*.png
+
+# Personal / private docs (not for public repo)
+doc/queja_aena/
+
+# Informes mensuales AENA: ~656 MB de PDFs públicos, demasiado pesado para git.
+# Ver doc/aena/informes_mensuales_ruido/README.md para instrucciones de descarga.
+doc/aena/informes_mensuales_ruido/*
+!doc/aena/informes_mensuales_ruido/README.md
