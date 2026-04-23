@@ -6,11 +6,14 @@ import pytest
 
 from src.noise_report_parser import (
     MONTH_TO_NUM,
+    _extract_date_range,
+    _iter_months,
     _normalize_text,
     _parse_monthly_from_text,
     _parse_summary_line,
     _parse_value_flags,
     parse_annual_summary,
+    parse_monthly_report,
     parse_tmr_monthly,
 )
 
@@ -191,3 +194,62 @@ class TestParseTMRMonthlyReal:
         rep = parse_tmr_monthly(REPORTS_DIR / "2025_informe_anual.pdf", 16, 2025)
         assert "Tres Cantos" in rep.location_name
         assert "King" in rep.location_name
+
+
+class TestDateRange:
+    def test_extract_date_range(self):
+        start, end = _extract_date_range("Junio 2024 – Junio 2025")
+        assert start == (2024, 6)
+        assert end == (2025, 6)
+
+    def test_extract_date_range_ascii_dash(self):
+        start, end = _extract_date_range("Enero 2024 - Diciembre 2025")
+        assert start == (2024, 1)
+        assert end == (2025, 12)
+
+    def test_no_date_range(self):
+        start, end = _extract_date_range("sin fechas aquí")
+        assert start is None and end is None
+
+
+class TestIterMonths:
+    def test_spans_year_boundary(self):
+        months = list(_iter_months((2024, 11), (2025, 2)))
+        assert months == [(2024, 11), (2024, 12), (2025, 1), (2025, 2)]
+
+    def test_single_month(self):
+        assert list(_iter_months((2025, 5), (2025, 5))) == [(2025, 5)]
+
+
+MONTHLY_REPORTS_DIR = Path(__file__).resolve().parent.parent / "doc" / "aena" / "informes_mensuales_ruido"
+
+
+@pytest.mark.skipif(
+    not MONTHLY_REPORTS_DIR.exists(),
+    reason="PDFs de informes mensuales no disponibles",
+)
+class TestParseMonthlyReportReal:
+    def test_2025_06_returns_13_months_per_period(self):
+        """Informe mensual jun-2025 cubre jun-2024 a jun-2025 = 13 meses."""
+        rep = parse_monthly_report(
+            MONTHLY_REPORTS_DIR / "2025" / "2025-06_informe_ruido.pdf", 16
+        )
+        assert rep is not None
+        assert len(rep.monthly) == 13 * 3
+        years = {r.year for r in rep.monthly}
+        assert years == {2024, 2025}
+
+    def test_2025_06_matches_annual(self):
+        """Los valores de 2025-01 a 2025-06 en el informe jun-2025 deben coincidir
+        con los del informe anual 2025."""
+        rep_m = parse_monthly_report(
+            MONTHLY_REPORTS_DIR / "2025" / "2025-06_informe_ruido.pdf", 16
+        )
+        rep_a = parse_tmr_monthly(REPORTS_DIR / "2025_informe_anual.pdf", 16, 2025)
+        # Mapa (month, period) -> (total, avion) en ambos
+        m_map = {(r.month, r.period): (r.laeq_total, r.laeq_avion)
+                 for r in rep_m.monthly if r.year == 2025}
+        a_map = {(r.month, r.period): (r.laeq_total, r.laeq_avion)
+                 for r in rep_a.monthly if r.month <= 6}
+        for key in a_map:
+            assert m_map[key] == a_map[key], f"mismatch at {key}"
