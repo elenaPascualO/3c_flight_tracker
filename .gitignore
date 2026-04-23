@@ -21,6 +21,7 @@ data/*.db
 
 # Output
 output/charts/*.png
+out/
 
 # Personal / private docs (not for public repo)
 doc/queja_aena/
