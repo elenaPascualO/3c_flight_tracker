@@ -1,0 +1,427 @@
+[
+  {
+    "sensor": "vivero",
+    "period": "day",
+    "metric": "total",
+    "n": 78,
+    "pearson_r": 0.03565762620110694,
+    "pearson_p": 0.7566113002854127,
+    "spearman_r": -0.03708812518228239,
+    "spearman_p": 0.7471678571688926,
+    "regression": {
+      "slope": 0.00826623093565396,
+      "intercept": 55.67588365233157,
+      "r_squared": 0.0012714663062978672,
+      "p_value": 0.7566113002854132,
+      "std_err": 0.026574924474159517
+    },
+    "residuals_std": 2.5427754136504217,
+    "outliers": [
+      {
+        "year": 2017,
+        "month": 1,
+        "residual": -10.28745637564149
+      },
+      {
+        "year": 2018,
+        "month": 5,
+        "residual": 7.8265748226277125
+      },
+      {
+        "year": 2017,
+        "month": 3,
+        "residual": -6.6275796871615285
+      },
+      {
+        "year": 2019,
+        "month": 1,
+        "residual": 5.976172208241643
+      },
+      {
+        "year": 2018,
+        "month": 6,
+        "residual": 5.276977437013791
+      },
+      {
+        "year": 2019,
+        "month": 2,
+        "residual": 5.265426108025288
+      }
+    ]
+  },
+  {
+    "sensor": "vivero",
+    "period": "day",
+    "metric": "avion",
+    "n": 78,
+    "pearson_r": -0.18606717396406375,
+    "pearson_p": 0.10288036334952447,
+    "spearman_r": -0.20500721822572568,
+    "spearman_p": 0.07177876717371524,
+    "regression": {
+      "slope": -0.04653308569042454,
+      "intercept": 40.98262890256028,
+      "r_squared": 0.03462099322697315,
+      "p_value": 0.10288036334952458,
+      "std_err": 0.02818605012064896
+    },
+    "residuals_std": 2.696933168122254,
+    "outliers": [
+      {
+        "year": 2020,
+        "month": 6,
+        "residual": -6.989285925772954
+      },
+      {
+        "year": 2020,
+        "month": 5,
+        "residual": -6.877514251647106
+      },
+      {
+        "year": 2020,
+        "month": 4,
+        "residual": -6.633353954475616
+      }
+    ]
+  },
+  {
+    "sensor": "vivero",
+    "period": "evening",
+    "metric": "total",
+    "n": 75,
+    "pearson_r": -0.2545213691517306,
+    "pearson_p": 0.027550661835329608,
+    "spearman_r": -0.28161229587885583,
+    "spearman_p": 0.014379999396519736,
+    "regression": {
+      "slope": -0.08124282995874944,
+      "intercept": 52.28485779721649,
+      "r_squared": 0.06478112735487156,
+      "p_value": 0.02755066183532953,
+      "std_err": 0.036129004337963094
+    },
+    "residuals_std": 3.3965553397520245,
+    "outliers": [
+      {
+        "year": 2017,
+        "month": 7,
+        "residual": -18.215674237317877
+      },
+      {
+        "year": 2019,
+        "month": 11,
+        "residual": -11.822003107771636
+      },
+      {
+        "year": 2020,
+        "month": 4,
+        "residual": -10.877504066058002
+      },
+      {
+        "year": 2019,
+        "month": 7,
+        "residual": -8.515731597647878
+      },
+      {
+        "year": 2017,
+        "month": 1,
+        "residual": -7.371117835274241
+      }
+    ]
+  },
+  {
+    "sensor": "vivero",
+    "period": "evening",
+    "metric": "avion",
+    "n": 78,
+    "pearson_r": -0.3662963034848774,
+    "pearson_p": 0.0009729233791304354,
+    "spearman_r": -0.44424627965177305,
+    "spearman_p": 4.6139304807400646e-05,
+    "regression": {
+      "slope": -0.14572021608919555,
+      "intercept": 36.17316514358564,
+      "r_squared": 0.13417298194668542,
+      "p_value": 0.0009729233791304367,
+      "std_err": 0.042461569354142
+    },
+    "residuals_std": 4.062861389642359,
+    "outliers": [
+      {
+        "year": 2020,
+        "month": 7,
+        "residual": -11.981349448460396
+      },
+      {
+        "year": 2021,
+        "month": 7,
+        "residual": 11.542700366688848
+      },
+      {
+        "year": 2020,
+        "month": 8,
+        "residual": -10.641641686158511
+      },
+      {
+        "year": 2021,
+        "month": 6,
+        "residual": -10.074961731726233
+      },
+      {
+        "year": 2021,
+        "month": 8,
+        "residual": -8.680974185513545
+      },
+      {
+        "year": 2020,
+        "month": 6,
+        "residual": -8.601933923856627
+      }
+    ]
+  },
+  {
+    "sensor": "vivero",
+    "period": "night",
+    "metric": "total",
+    "n": 78,
+    "pearson_r": -0.05998235464937829,
+    "pearson_p": 0.6019021743690167,
+    "spearman_r": -0.17932414861074134,
+    "spearman_p": 0.11619620350769794,
+    "regression": {
+      "slope": -0.01013480933047835,
+      "intercept": 49.87486400825122,
+      "r_squared": 0.00359788286928379,
+      "p_value": 0.6019021743690166,
+      "std_err": 0.019346508431711092
+    },
+    "residuals_std": 1.8511370005197876,
+    "outliers": [
+      {
+        "year": 2018,
+        "month": 8,
+        "residual": -11.463381105615966
+      },
+      {
+        "year": 2020,
+        "month": 3,
+        "residual": 4.477158131705956
+      },
+      {
+        "year": 2020,
+        "month": 8,
+        "residual": -4.312707058963568
+      },
+      {
+        "year": 2019,
+        "month": 8,
+        "residual": -3.7627118808724944
+      }
+    ]
+  },
+  {
+    "sensor": "vivero",
+    "period": "night",
+    "metric": "avion",
+    "n": 69,
+    "pearson_r": 0.045338617800051495,
+    "pearson_p": 0.7114414151399491,
+    "spearman_r": 0.0459445455453077,
+    "spearman_p": 0.7077572084010285,
+    "regression": {
+      "slope": 0.03740041942367757,
+      "intercept": 12.804917324931841,
+      "r_squared": 0.0020555902640191455,
+      "p_value": 0.7114414151399494,
+      "std_err": 0.10067554053617639
+    },
+    "residuals_std": 8.881623493009672,
+    "outliers": [
+      {
+        "year": 2017,
+        "month": 6,
+        "residual": 17.995694831845388
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "day",
+    "metric": "total",
+    "n": 30,
+    "pearson_r": -0.14572150806141748,
+    "pearson_p": 0.4422792515037951,
+    "spearman_r": -0.15489040587039415,
+    "spearman_p": 0.41377375332111804,
+    "regression": {
+      "slope": -0.027383866146460673,
+      "intercept": 54.01919648296723,
+      "r_squared": 0.02123475791169376,
+      "p_value": 0.44227925150379516,
+      "std_err": 0.03513430440178422
+    },
+    "residuals_std": 2.0558754084935806,
+    "outliers": [
+      {
+        "year": 2026,
+        "month": 2,
+        "residual": 5.648774296744733
+      },
+      {
+        "year": 2025,
+        "month": 6,
+        "residual": 4.272392802927158
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "day",
+    "metric": "avion",
+    "n": 29,
+    "pearson_r": -0.6016036830243052,
+    "pearson_p": 0.0005562340219511607,
+    "spearman_r": -0.6001002220509158,
+    "spearman_p": 0.0005791046299980676,
+    "regression": {
+      "slope": -0.07193257848348794,
+      "intercept": 51.44554880465181,
+      "r_squared": 0.36192699142840845,
+      "p_value": 0.0005562340219511632,
+      "std_err": 0.018380970864641844
+    },
+    "residuals_std": 1.0739727611709107,
+    "outliers": [
+      {
+        "year": 2026,
+        "month": 1,
+        "residual": 2.692397155141066
+      },
+      {
+        "year": 2025,
+        "month": 8,
+        "residual": -2.2816522529730676
+      },
+      {
+        "year": 2023,
+        "month": 7,
+        "residual": -2.1703624949429354
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "evening",
+    "metric": "total",
+    "n": 30,
+    "pearson_r": -0.3702673307321416,
+    "pearson_p": 0.0440000315106928,
+    "spearman_r": -0.3079150439496372,
+    "spearman_p": 0.09785235137589353,
+    "regression": {
+      "slope": -0.05524598703519406,
+      "intercept": 50.00081558175486,
+      "r_squared": 0.13709789620750515,
+      "p_value": 0.04400003151069283,
+      "std_err": 0.026193111408436696
+    },
+    "residuals_std": 1.532683641626416,
+    "outliers": [
+      {
+        "year": 2025,
+        "month": 8,
+        "residual": -3.8605193554832553
+      },
+      {
+        "year": 2025,
+        "month": 5,
+        "residual": 3.5107432043258484
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "evening",
+    "metric": "avion",
+    "n": 30,
+    "pearson_r": -0.40264538933175587,
+    "pearson_p": 0.0273841778253736,
+    "spearman_r": -0.3902928937409356,
+    "spearman_p": 0.032984250231600176,
+    "regression": {
+      "slope": -0.07338573009968251,
+      "intercept": 48.120445069941866,
+      "r_squared": 0.16212330955012122,
+      "p_value": 0.027384177825373657,
+      "std_err": 0.031528254500179695
+    },
+    "residuals_std": 1.8448682620383627,
+    "outliers": [
+      {
+        "year": 2025,
+        "month": 8,
+        "residual": -4.937076286606114
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "night",
+    "metric": "total",
+    "n": 26,
+    "pearson_r": 0.19022097635807356,
+    "pearson_p": 0.3519698798218176,
+    "spearman_r": 0.21238031337781946,
+    "spearman_p": 0.2975905741100898,
+    "regression": {
+      "slope": 0.050601904085680154,
+      "intercept": 40.35005759747658,
+      "r_squared": 0.03618401984661876,
+      "p_value": 0.3519698798218178,
+      "std_err": 0.053308921102385436
+    },
+    "residuals_std": 2.9470241770666314,
+    "outliers": [
+      {
+        "year": 2025,
+        "month": 5,
+        "residual": 7.1150109851096985
+      },
+      {
+        "year": 2023,
+        "month": 9,
+        "residual": 6.402482987949838
+      }
+    ]
+  },
+  {
+    "sensor": "kings_college",
+    "period": "night",
+    "metric": "avion",
+    "n": 30,
+    "pearson_r": -0.2242565143014711,
+    "pearson_p": 0.23351283336551254,
+    "spearman_r": -0.1306622350337567,
+    "spearman_p": 0.4913166230498729,
+    "regression": {
+      "slope": -0.07065944636936637,
+      "intercept": 24.81413094884705,
+      "r_squared": 0.05029098420664592,
+      "p_value": 0.23351283336551276,
+      "std_err": 0.05802851110988936
+    },
+    "residuals_std": 3.395524431565512,
+    "outliers": [
+      {
+        "year": 2023,
+        "month": 9,
+        "residual": 7.648519590998834
+      },
+      {
+        "year": 2024,
+        "month": 8,
+        "residual": 7.247442815915946
+      }
+    ]
+  }
+]

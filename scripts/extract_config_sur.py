@@ -7,6 +7,7 @@ from pathlib import Path
 import pdfplumber
 
 BASE = Path("doc/aena/informes_mensuales_ruido")
+OUT_CSV = Path("data/config_sur_monthly.csv")
 
 # Regex sobre el bloque "Operatividad" del informe ejecutivo (página 3).
 # Ejemplo:
@@ -45,6 +46,7 @@ def extract(pdf_path: Path) -> dict | None:
 
 
 def main() -> None:
+    import csv
     results: list[tuple[int, int, dict]] = []
     for year_dir in sorted(BASE.iterdir()):
         if not year_dir.is_dir():
@@ -69,6 +71,14 @@ def main() -> None:
     for year, month, d in results:
         acum = f"{d['pct_acum_horas_sur']:.1f}%" if d['pct_acum_horas_sur'] is not None else "—"
         print(f"{year}-{month:02d}     {d['horas_sur']:>9.1f}  {d['pct_horas_sur']:>7.1f}%  {d['pct_ops_sur']:>7.1f}%  {acum:>8}")
+
+    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
+    with OUT_CSV.open("w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["year", "month", "horas_sur", "pct_horas_sur", "pct_ops_sur", "pct_acum_horas_sur"])
+        for year, month, d in results:
+            writer.writerow([year, month, d["horas_sur"], d["pct_horas_sur"], d["pct_ops_sur"], d["pct_acum_horas_sur"]])
+    print(f"\nCSV → {OUT_CSV}")
 
 
 if __name__ == "__main__":
